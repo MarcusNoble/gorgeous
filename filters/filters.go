@@ -1,0 +1,130 @@
+package filters
+
+import (
+	"log"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"github.com/fatih/color"
+	"fmt"
+)
+
+const (
+	// runningTestPrefix    = "=== RUN   "                   // running test
+	baseIndent            = "    "         // base indentation for subtests
+	passingTestPrefix     = "--- PASS: "   // passing test
+	failingTestPrefix     = "--- FAIL: "   // failing test
+	coveragePrefix        = "coverage: "   // normal coverage prefix, useful for generating bars
+	packageCoveragePrefix = "ok  	" // package level coverage prefix
+
+	// test output
+	indentedTestPrefix = "\t"
+)
+
+// filter slice
+var All = []func(string) string{
+	Pass,
+	Fail,
+	SubTest,
+	Indent,
+	PkgCoverage,
+	RegCoverage,
+}
+
+// colors
+var green = color.New(color.FgHiGreen).Sprintf
+var red = color.New(color.FgHiRed).Sprintf
+
+func Pass(txt string) string {
+	txt = filterPrefix(txt, passingTestPrefix)
+	if txt != "" {
+		return green("✔   ") + txt
+	}
+	return txt
+}
+
+func Fail(txt string) string {
+	txt = filterPrefix(txt, failingTestPrefix)
+	if txt != "" {
+		return red("✘   ") + txt
+	}
+	return txt
+}
+
+func SubTest(txt string) string {
+	if has(strings.TrimPrefix(txt, baseIndent), passingTestPrefix) != "" {
+		txt = strings.TrimPrefix(txt, baseIndent)
+		txt = Pass(txt)
+		// ├──
+		return green("├── ") + txt
+	}
+
+	if has(strings.TrimPrefix(txt, baseIndent), failingTestPrefix) != "" {
+		txt = strings.TrimPrefix(txt, baseIndent)
+		txt = Fail(txt)
+		return red("├── ") + txt
+	}
+
+	return ""
+}
+
+func Indent(txt string) string {
+	if txt = has(txt, indentedTestPrefix); txt != "" {
+		return color.HiBlueString(txt)
+	}
+	return ""
+}
+
+func PkgCoverage(txt string) string {
+	if txt = filterPrefix(txt, packageCoveragePrefix); txt != "" {
+		parts := strings.Split(txt, "\t")
+		parts[0] = filepath.Base(parts[0])
+		txt = strings.Join(parts[0:2], "\t")
+
+		return color.HiMagentaString("┗ " + txt + "\n")
+	}
+	return ""
+}
+
+func RegCoverage(txt string) string {
+	if txt = has(txt, coveragePrefix); txt != "" {
+		return color.HiMagentaString(parseCoverage(txt))
+	}
+	return ""
+}
+
+func filterPrefix(txt, prefix string) string {
+	if strings.HasPrefix(txt, prefix) {
+		return strings.TrimPrefix(txt, prefix)
+	}
+	return ""
+}
+
+func has(txt, prefix string) string {
+	if strings.HasPrefix(txt, prefix) {
+		return txt
+	}
+	return ""
+}
+
+func parseCoverage(txt string) string {
+	const pre = "\nCoverage: %.1f%% ╠"
+	const suf = "╣"
+	const fil = "▓"
+	const max = 10
+
+	txt = strings.TrimPrefix(txt, coveragePrefix)
+	parts := strings.Split(txt, "%")
+	num, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		log.Fatalf("cannot parse coverage: %v", err)
+	}
+	if int(num) == 0 {
+		return fmt.Sprintf(pre, num) + strings.Repeat(" ", 10) + suf
+	}
+	sum := int(num) / 10
+	numSpaces := 10 - sum
+
+	return fmt.Sprintf(pre, num) + strings.Repeat(fil, sum) + strings.Repeat(" ", numSpaces) + suf
+}
