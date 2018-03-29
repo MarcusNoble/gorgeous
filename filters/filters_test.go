@@ -1,6 +1,7 @@
 package filters
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -17,4 +18,7 @@ func Test_parseCoverage(t *testing.T) {
 	if res2 != exp2 {
 		t.Errorf("wanted: %s, but got: %s", exp2, res2)
 	}
+	t.Run("sub test output", func(t *testing.T) {
+		fmt.Println("something")
+	})
 }

@@ -6,23 +6,24 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fatih/color"
 	"fmt"
+
+	"github.com/fatih/color"
 )
 
 const (
 	// runningTestPrefix    = "=== RUN   "                   // running test
-	baseIndent            = "    "         // base indentation for subtests
-	passingTestPrefix     = "--- PASS: "   // passing test
-	failingTestPrefix     = "--- FAIL: "   // failing test
-	coveragePrefix        = "coverage: "   // normal coverage prefix, useful for generating bars
-	packageCoveragePrefix = "ok  	" // package level coverage prefix
+	baseIndent            = "    "       // base indentation for subtests
+	passingTestPrefix     = "--- PASS: " // passing test
+	failingTestPrefix     = "--- FAIL: " // failing test
+	coveragePrefix        = "coverage: " // normal coverage prefix, useful for generating bars
+	packageCoveragePrefix = "ok  	"      // package level coverage prefix
 
 	// test output
 	indentedTestPrefix = "\t"
 )
 
-// filter slice
+// All filters in a slice
 var All = []func(string) string{
 	Pass,
 	Fail,
@@ -36,6 +37,7 @@ var All = []func(string) string{
 var green = color.New(color.FgHiGreen).Sprintf
 var red = color.New(color.FgHiRed).Sprintf
 
+// Pass defines a passing test filter
 func Pass(txt string) string {
 	txt = filterPrefix(txt, passingTestPrefix)
 	if txt != "" {
@@ -44,6 +46,7 @@ func Pass(txt string) string {
 	return txt
 }
 
+// Fail defines a failing test filter
 func Fail(txt string) string {
 	txt = filterPrefix(txt, failingTestPrefix)
 	if txt != "" {
@@ -52,11 +55,11 @@ func Fail(txt string) string {
 	return txt
 }
 
+// SubTest defines an indented sub test filter
 func SubTest(txt string) string {
 	if has(strings.TrimPrefix(txt, baseIndent), passingTestPrefix) != "" {
 		txt = strings.TrimPrefix(txt, baseIndent)
 		txt = Pass(txt)
-		// ├──
 		return green("├── ") + txt
 	}
 
@@ -66,9 +69,15 @@ func SubTest(txt string) string {
 		return red("├── ") + txt
 	}
 
+	if has(strings.TrimPrefix(txt, baseIndent), indentedTestPrefix) != "" {
+		txt = strings.TrimPrefix(txt, baseIndent)
+		return Indent(txt)
+	}
+
 	return ""
 }
 
+// Indent defines an indented line filter
 func Indent(txt string) string {
 	if txt = has(txt, indentedTestPrefix); txt != "" {
 		return color.HiBlueString(txt)
@@ -76,6 +85,7 @@ func Indent(txt string) string {
 	return ""
 }
 
+// PkgCoverage filters the package coverage stats
 func PkgCoverage(txt string) string {
 	if txt = filterPrefix(txt, packageCoveragePrefix); txt != "" {
 		parts := strings.Split(txt, "\t")
@@ -87,6 +97,7 @@ func PkgCoverage(txt string) string {
 	return ""
 }
 
+// RegCoverage filters regular coverage flags
 func RegCoverage(txt string) string {
 	if txt = has(txt, coveragePrefix); txt != "" {
 		return color.HiMagentaString(parseCoverage(txt))
