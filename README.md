@@ -2,6 +2,10 @@
 
 Easy to use prettifier `go test`.
 
+![](out.png)
+
+Go from classic output, to a colour-coded, easier to read-at-a-glance format.
+
 ## Usage
 
 `go test -v -cover ./... | gorgeous`
