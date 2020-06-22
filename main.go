@@ -29,6 +29,7 @@ func main() {
 	flag.BoolVar(&isJSON, "json", false, "pass this flag if you are dealing with JSON test output (defaults to false)")
 	flag.Parse()
 
+	hasFailed := false
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		switch isJSON {
@@ -37,8 +38,11 @@ func main() {
 			if err := json.Unmarshal(scanner.Bytes(), &out); err != nil {
 				log.Fatalln(err)
 			}
+			txt := strings.TrimSuffix(out.Output, "\n")
+			if t := filters.Fail(txt); t != "" {
+				hasFailed = true
+			}
 			for _, f := range filters.All {
-				txt := strings.TrimSuffix(out.Output, "\n")
 				if t := f(txt); t != "" {
 					fmt.Println(t)
 				}
@@ -48,11 +52,18 @@ func main() {
 			if prefix != "" {
 				txt = strings.TrimPrefix(txt, prefix)
 			}
+			if t := filters.Fail(txt); t != "" {
+				hasFailed = true
+			}
 			for _, f := range filters.All {
 				if t := f(txt); t != "" {
 					fmt.Println(t)
 				}
 			}
 		}
+	}
+
+	if hasFailed {
+		os.Exit(1)
 	}
 }
