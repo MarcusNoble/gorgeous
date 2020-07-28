@@ -10,7 +10,7 @@ import (
 	"flag"
 	"strings"
 
-	"github.com/ladydascalie/gorgeous/filters"
+	"github.com/MarcusNoble/gorgeous/filters"
 )
 
 var prefix string
