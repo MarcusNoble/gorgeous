@@ -1,4 +1,4 @@
-module github.com/ladydascalie/gorgeous
+module github.com/MarcusNoble/gorgeous
 
 go 1.14
 
