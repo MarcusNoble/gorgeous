@@ -22,3 +22,17 @@ func Test_parseCoverage(t *testing.T) {
 		fmt.Println("something")
 	})
 }
+
+func Test_fail(t *testing.T) {
+	if Fail("FAIL    example/pkg/failing [build failed]") == "" {
+		t.Errorf("Expecting a failure\n")
+	}
+
+	if Fail("--- FAIL: Test_fail (0.00s)") == "" {
+		t.Errorf("Expecting a failure\n")
+	}
+
+	if Fail("ok      github.com/MarcusNoble/gorgeous/filters 0.026s") != "" {
+		t.Errorf("Wasn't expecting a failure\n")
+	}
+}

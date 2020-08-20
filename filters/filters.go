@@ -13,11 +13,12 @@ import (
 
 const (
 	// runningTestPrefix    = "=== RUN   "                   // running test
-	baseIndent            = "    "       // base indentation for subtests
-	passingTestPrefix     = "--- PASS: " // passing test
-	failingTestPrefix     = "--- FAIL: " // failing test
-	coveragePrefix        = "coverage: " // normal coverage prefix, useful for generating bars
-	packageCoveragePrefix = "ok  	"      // package level coverage prefix
+	baseIndent            = "    "           // base indentation for subtests
+	passingTestPrefix     = "--- PASS: "     // passing test
+	failingTestPrefix     = "--- FAIL: "     // failing test
+	coveragePrefix        = "coverage: "     // normal coverage prefix, useful for generating bars
+	packageCoveragePrefix = "ok  	"          // package level coverage prefix
+	buildFailedSuffix     = "[build failed]" // package level build failure
 
 	// test output
 	indentedTestPrefix = "\t"
@@ -48,11 +49,15 @@ func Pass(txt string) string {
 
 // Fail defines a failing test filter
 func Fail(txt string) string {
-	txt = filterPrefix(txt, failingTestPrefix)
-	if txt != "" {
-		return red("✘   ") + txt
+	result := filterPrefix(txt, failingTestPrefix)
+	if result != "" {
+		return red("✘   ") + result
 	}
-	return txt
+	result = filterSuffix(txt, buildFailedSuffix)
+	if result != "" {
+		return red("✘   ") + result
+	}
+	return result
 }
 
 // SubTest defines an indented sub test filter
@@ -108,6 +113,13 @@ func RegCoverage(txt string) string {
 func filterPrefix(txt, prefix string) string {
 	if strings.HasPrefix(txt, prefix) {
 		return strings.TrimPrefix(txt, prefix)
+	}
+	return ""
+}
+
+func filterSuffix(txt, suffix string) string {
+	if strings.HasSuffix(txt, suffix) {
+		return strings.TrimSuffix(txt, suffix)
 	}
 	return ""
 }
