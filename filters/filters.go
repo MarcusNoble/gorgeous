@@ -2,7 +2,6 @@ package filters
 
 import (
 	"log"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -13,12 +12,13 @@ import (
 
 const (
 	// runningTestPrefix    = "=== RUN   "                   // running test
-	baseIndent            = "    "           // base indentation for subtests
-	passingTestPrefix     = "--- PASS: "     // passing test
-	failingTestPrefix     = "--- FAIL: "     // failing test
-	coveragePrefix        = "coverage: "     // normal coverage prefix, useful for generating bars
-	packageCoveragePrefix = "ok  	"          // package level coverage prefix
-	buildFailedSuffix     = "[build failed]" // package level build failure
+	baseIndent                = "    "           // base indentation for subtests
+	passingTestPrefix         = "--- PASS: "     // passing test
+	failingTestPrefix         = "--- FAIL: "     // failing test
+	coveragePrefix            = "coverage: "     // normal coverage prefix, useful for generating bars
+	packageCoveragePassPrefix = "ok  	"          // package level coverage prefix
+	packageCoverageFailPrefix = "FAIL\t"         // package level coverage prefix
+	buildFailedSuffix         = "[build failed]" // package level build failure
 
 	// test output
 	indentedTestPrefix = "\t"
@@ -92,13 +92,16 @@ func Indent(txt string) string {
 
 // PkgCoverage filters the package coverage stats
 func PkgCoverage(txt string) string {
-	if txt = filterPrefix(txt, packageCoveragePrefix); txt != "" {
-		parts := strings.Split(txt, "\t")
-		parts[0] = filepath.Base(parts[0])
-		txt = strings.Join(parts[0:2], "\t")
-
-		return color.HiMagentaString("┗ " + txt + "\n")
+	if filterPrefix(txt, packageCoveragePassPrefix) != "" {
+		txt = strings.TrimSpace(filterPrefix(txt, packageCoveragePassPrefix))
+		return color.HiGreenString("⎮\n┗   " + txt + "\n")
 	}
+
+	if filterPrefix(txt, packageCoverageFailPrefix) != "" {
+		txt = strings.TrimSpace(filterPrefix(txt, packageCoverageFailPrefix))
+		return color.HiRedString("⎮\n┗ ✘ " + txt + "\n")
+	}
+
 	return ""
 }
 
